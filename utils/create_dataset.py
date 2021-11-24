@@ -1,9 +1,8 @@
+import os
 import re
 import glob
 import numpy as np
 import pandas as pd
-
-global IN_PATH = './datain'
 
 def clean(text):
     text = str(text)
@@ -16,7 +15,7 @@ def clean(text):
 
 def join_sources(split='train'):
     datasets = []
-    for i, source in enumerate(glob.glob(f'{IN_PATH}/*')):
+    for i, source in enumerate(glob.glob(f'{os.environ.get("IN_PATH")}/*')):
         data = pd.read_csv(f'{source}/{split}.csv')
         num_source = int(source[-1])
         if i + 1 == num_source:
@@ -58,7 +57,12 @@ def balance_classes(df, bias=0):
     return dff
     
 def preprocess_driver(split='train', bias=0.5):
-    opath = f'{IN_PATH}/preprocessed_{split}.csv'
+    opath = f'{os.environ.get("IN_PATH")}/preprocessed_{split}.csv'
     df = join_sources(split=split)
     df = balance_classes(df, bias=bias)
     df.to_csv(opath, index=False)
+    
+if  __name__ ==  '__main__':
+    preprocess_driver(split='train', bias=0.5)
+    
+    
