@@ -25,16 +25,13 @@ def join_sources(split='train'):
                 data['toxicity'] = data.toxic + data.severe_toxic + \
                                    data.obscene + data.threat + \
                                    data.insult + data.identity_hate
-                data['target'] = (data.toxicity >= 0.5).astype(int)
-                data['comment_text'] = data.comment_text.map(clean)
-                data = data[['comment_text', 'target']].drop_duplicates()
-                datasets.append(data)
+                data['target'] = (data.toxicity > 0).astype(int)
             elif num_source == 2:
                 data['target'] = (data.target >= 0.5).astype(int)
-                data['comment_text'] = data.comment_text.map(clean)
-                data = data[['comment_text', 'target']].drop_duplicates()
-                datasets.append(data)
-    return pd.concat(datasets)
+            data['comment_text'] = data.comment_text.map(clean)
+            data = data[['comment_text', 'target']]
+            datasets.append(data)
+    return pd.concat(datasets).drop_duplicates()
 
 def get_toxicity_stats(df):
     positive_samples = len(df.query('target==1'))
