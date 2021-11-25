@@ -18,15 +18,14 @@ def join_sources(split='train'):
     for i, source in enumerate(glob.glob(f'{os.environ.get("IN_PATH")}/*')):
         data = pd.read_csv(f'{source}/{split}.csv')
         num_source = int(source[-1])
-        if i + 1 == num_source:
-            print(f'Processing source #{num_source}: {source}')
-            if num_source == 1:
-                data['toxicity'] = data.toxic + data.severe_toxic + \
-                                   data.obscene + data.threat + \
-                                   data.insult + data.identity_hate
-                data['target'] = (data.toxicity > 0).astype(int)
-            elif num_source == 2:
-                data['target'] = (data.target >= 0.5).astype(int)
+        print(f'Processing source #{num_source}: {source}')
+        if num_source == 1:
+            data['toxicity'] = data.toxic + data.severe_toxic + \
+                                data.obscene + data.threat + \
+                                data.insult + data.identity_hate
+            data['target'] = (data.toxicity > 0).astype(int)
+        elif num_source == 2:
+            data['target'] = (data.target >= 0.5).astype(int)
             data['comment_text'] = data.comment_text.map(clean)
             data = data[['comment_text', 'target']]
             datasets.append(data)
