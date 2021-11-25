@@ -1,5 +1,5 @@
-re
-glob
+regex
+glob2
 nltk
 tqdm
 numpy
@@ -7,6 +7,6 @@ torch
 numba
 pandas
 matplotlib
-collections
+kaggle
 transformers
 tokenizers
