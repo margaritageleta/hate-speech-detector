@@ -1,5 +1,6 @@
 import os
 import gc
+import sys
 import glob
 import yaml
 import time
@@ -16,7 +17,7 @@ import torch_optimizer as torchoptim
 from transformers import DistilBertTokenizer, DistilBertTokenizerFast
 from transformers import DistilBertModel, DistilBertConfig
 
-from models.model import FineTuneNet
+from model.models import FineTuneNet
 
 ## Seed for reproducibility.
 seed = 2021 
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     for param in distilBert.parameters():
         param.requires_grad = True
 
-    model = FineTuneNet(distilBert)
+    model = FineTuneNet(distilBert, params)
     model = model.cuda()
     
     criterion = nn.BCELoss()
@@ -155,7 +156,7 @@ if __name__ == '__main__':
             input_masks = input_masks.cuda()
 
             outputs = model(input_tokens, input_masks).cpu()
-            loss = criterion(outputs, torch.Tensor(Y_train[i:i+BATCH_SIZE].reshape(-1,1)))
+            loss = criterion(outputs, torch.Tensor(Y_train[i:i+batch_size].reshape(-1,1)))
 
             wandb.log({ 'BCE train': loss })
             
@@ -206,7 +207,7 @@ if __name__ == '__main__':
         tqdm.write('[%d, %5d] VD loss: %.3f' % (epoch + 1, i + 1, running_loss / num_steps_vd)) 
         if bool(running_loss < best_loss):
             print('Storing a new best model...')
-            torch.save(state, os.path.join(os.environ.get('OUT_PATH'), f'distil_weights_{experiment}.pt'))
+            torch.save(model.state_dict(), os.path.join(os.environ.get('OUT_PATH'), f'distil_weights_{experiment}.pt'))
             
     print('Finished Training!')
     
