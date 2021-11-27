@@ -42,3 +42,23 @@ class DistilBert(nn.Module):
         o = torch.cat(o, axis=0)
         # Return only [CLS] transformed token
         return o.detach().cpu()
+    
+class FineTuneNet(nn.Module):
+    def __init__(self, transformer, params):
+        super().__init__()
+        self.transformer = transformer
+        self.fc1 = nn.Linear(768,256)
+        self.fc2 = nn.Linear(256,1)
+        self.dropout = nn.Dropout(params['dropout'])
+        self.bn = nn.BatchNorm1d(256)
+        
+        
+    def forward(self, x, att_x):
+        x = self.transformer(input_ids=x, attention_mask=att_x).last_hidden_state[:,0,:]
+        x = self.dropout(x)
+        x = self.fc1(x)
+        x = F.relu(self.bn(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = F.sigmoid(x)
+        return x
