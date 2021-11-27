@@ -5,6 +5,7 @@ import yaml
 import time
 import torch
 import numba
+import wandb
 import random
 import numpy as np
 import pandas as pd
@@ -119,6 +120,23 @@ if __name__ == '__main__':
     epochs = params['epochs']
     num_steps = len(X_train) // batch_size
     num_steps_vd = len(X_valid) // batch_size
+    
+    ## Initialize wandb
+    os.environ["WANDB_START_METHOD"] = "thread"
+    ## Automate tag creation on run launch:
+    wandb_tags = []
+    wandb_tags.append(f"lr {params['lr']}")
+    wandb_tags.append(f"dropout {params['dropout']}")
+    wandb.init(
+        project='nlptoxic',
+        dir=os.environ.get('OUT_PATH'),
+        tags=wandb_tags,
+        # resume='allow',
+    )
+    wandb.run.name = f'Experiment #{experiment}'
+    wandb.run.save()
+    print('Wandb ready.')
+    wandb.watch(model)
 
     best_loss = np.inf
     for epoch in tqdm(range(epochs), file=sys.stdout): 
@@ -139,6 +157,8 @@ if __name__ == '__main__':
             outputs = model(input_tokens, input_masks).cpu()
             loss = criterion(outputs, torch.Tensor(Y_train[i:i+BATCH_SIZE].reshape(-1,1)))
 
+            wandb.log({ 'BCE train': loss })
+            
             if k % 10 == 0:
                 print(f'{np.round(k / num_steps * 100,3)}% | TR Loss: {loss}')
             loss.backward()
@@ -168,7 +188,9 @@ if __name__ == '__main__':
             with torch.no_grad():
                 outputs = model(input_tokens, input_masks).cpu()
                 loss = criterion(outputs, torch.Tensor(Y_valid[i:i+batch_size].reshape(-1,1)))
-
+            
+            wandb.log({ 'BCE valid': loss })
+            
             if k % 10 == 0:
                 print(f'{np.round(k / num_steps_vd * 100,3)}% | VD Loss: {loss}')
 
